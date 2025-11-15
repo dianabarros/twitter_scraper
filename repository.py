@@ -16,7 +16,7 @@ class TweetRepository:
 
     async def insert_tweet(self, tweet: TweetModel):
         query = """
-            INSERT INTO user_tweets (id, username, tweet, tweet_dt, ingestion_dt)
+            INSERT INTO public.user_tweets (id, username, tweet, tweet_dt, ingestion_dt)
             VALUES ($1, $2, $3, $4, $5)
             ON CONFLICT (id) DO NOTHING
         """
@@ -39,7 +39,7 @@ class TweetRepository:
             return
 
         query = """
-            INSERT INTO user_tweets (id, username, tweet, tweet_dt, ingestion_dt)
+            INSERT INTO public.user_tweets (id, username, tweet, tweet_dt, ingestion_dt)
             VALUES ($1, $2, $3, $4, $5)
             ON CONFLICT (id) DO NOTHING
         """
@@ -57,16 +57,16 @@ class TweetRepository:
             print(f"[ERROR] Failed batch insert: {e}")
 
     async def get_latest_tweet_id(self):
-        query = "SELECT id from user_tweets ORDER BY tweet_dt DESC LIMIT 1"
+        query = "SELECT id from public.user_tweets ORDER BY tweet_dt DESC LIMIT 1"
         async with self.db.pool.acquire() as conn:
             return await conn.fetchrow(query)
 
     async def get_tweet(self, tweet_id: str):
-        query = "SELECT * FROM user_tweets WHERE id = $1"
+        query = "SELECT * FROM public.user_tweets WHERE id = $1"
         async with self.db.pool.acquire() as conn:
             return await conn.fetchrow(query, tweet_id)
 
     async def get_all(self, limit=100):
-        query = "SELECT * FROM user_tweets ORDER BY tweet_dt DESC LIMIT $1"
+        query = "SELECT * FROM public.user_tweets ORDER BY tweet_dt DESC LIMIT $1"
         async with self.db.pool.acquire() as conn:
             return await conn.fetch(query, limit)
