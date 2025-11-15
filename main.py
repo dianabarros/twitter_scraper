@@ -10,23 +10,23 @@ async def main():
     username = os.getenv("USERNAME")
     scroll_pause = os.getenv("SCROLL_PAUSE")
     max_scrolls = os.getenv("MAX_SCROLLS")
-    headless = os.getenv("HEADLESS", False)
+    batch_size = os.geten("BATCH_SIZE", 200)
 
     db = Database(db_url)
-    db.connect()
+    await db.connect()
     repo = TweetRepository(db)
     
     scraper = Scraper(
         username=username,
         scroll_pause=scroll_pause,
         max_scrolls=max_scrolls,
-        headless=headless
+        batch_size=batch_size
     )
 
-    tweets = scraper.run()
-    await repo.batch_insert(tweets)
+    async for tweet_batch in scraper.run():
+        await repo.batch_insert(tweet_batch)
 
-    db.disconnect()
+    await db.disconnect()
 
 
 if __name__ == "__main__":
