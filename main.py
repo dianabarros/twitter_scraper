@@ -15,7 +15,7 @@ async def main():
 
     scroll_pause = os.getenv("SCROLL_PAUSE", 1)
     max_scrolls = os.getenv("MAX_SCROLLS", 200)
-    batch_size = os.getenv("BATCH_SIZE", 200)
+    batch_size = os.getenv("BATCH_SIZE", 10)
 
     db = Database(db_url)
     await db.connect()
@@ -29,7 +29,8 @@ async def main():
     )
 
     async for tweet_batch in scraper.run():
-        await repo.batch_insert(tweet_batch)
+        num_inserted = await repo.batch_insert(tweet_batch)
+        print(f"Inserted {num_inserted}/{len(tweet_batch)}")
 
     await db.disconnect()
 
