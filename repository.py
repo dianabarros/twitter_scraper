@@ -34,27 +34,40 @@ class TweetRepository:
         except Exception as e:
             print(f"[ERROR] Failed to insert tweet {tweet.id}: {e}")
 
-    async def batch_insert(self, tweets: List[TweetModel]):
+    async def batch_insert(self, tweets: List[TweetModel]) -> int:
         if not tweets:
-            return
+            return 0
 
         query = """
             INSERT INTO public.user_tweets (id, username, tweet, tweet_dt, ingestion_dt)
-            VALUES ($1, $2, $3, $4, $5)
+            SELECT * FROM unnest($1::bigint[], $2::text[], $3::text[], $4::timestamp[], $5::timestamp[])
             ON CONFLICT (id) DO NOTHING
+            RETURNING id
         """
 
-        values = [
-            (t.id, t.username, t.tweet, t.tweet_dt, t.ingestion_dt)
-            for t in tweets
-        ]
+        ids = [t.id for t in tweets]
+        usernames = [t.username for t in tweets]
+        tweet_texts = [t.tweet for t in tweets]
+        tweet_dts = [t.tweet_dt for t in tweets]
+        ingestion_dts = [t.ingestion_dt for t in tweets]
 
         try:
             async with self.db.pool.acquire() as conn:
                 async with conn.transaction():
-                    await conn.executemany(query, values)
+                    result = await conn.fetch(
+                        query, 
+                        ids, 
+                        usernames, 
+                        tweet_texts, 
+                        tweet_dts, 
+                        ingestion_dts
+                    )
+                    inserted_count = len(result)
+                    return inserted_count
+                    
         except Exception as e:
             print(f"[ERROR] Failed batch insert: {e}")
+            return 0
 
     async def get_latest_tweet_id(self):
         query = "SELECT id from public.user_tweets ORDER BY tweet_dt DESC LIMIT 1"

@@ -89,22 +89,21 @@ class Scraper:
         box_height_count = 0
         tweets_to_store = []
         while scroll < self.max_scrolls:
-            print(f"Scroll: {scroll}")
-            # ✅ Wait for tweet containers to appear
-            print("Waiting for tweets to load...")
+            # print(f"Scroll: {scroll}")
+            # print("Waiting for tweets to load...")
             try:
                 await page.wait_for_selector('article, div[data-testid="cellInnerDiv"], a[href*="/status/"]', timeout=20000)
-                print("Tweets detected!")
+                # print("Tweets detected!")
             except PlaywrightTimeout:
                 print("Timeout waiting for tweet selectors — page may require login or consent.")
             tweets = await page.query_selector_all('article') or page.query_selector_all('div[data-testid="tweetText"]')
-            print(f"Scroll {scroll}: Found {len(tweets)} tweet containers.")
+            # print(f"Scroll {scroll}: Found {len(tweets)} tweet containers.")
             for t in tweets:
                 data = await self.parse_tweet(t)
                 if not data["id"] or data["id"] in seen:
                     continue
                 seen.add(data["id"])
-                print(f"- [{data['id']}] {data['datetime']}: {data['content'][:60]!r}")
+                # print(f"- [{data['id']}] {data['datetime']}: {data['content'][:60]!r}")
                 tweets_to_store.append(
                     TweetModel(
                         id=data["id"],
@@ -127,7 +126,7 @@ class Scraper:
             box_height_sum += height
             box_height_count += 1
             box_height_avg = box_height_sum/box_height_count
-            print(f"box height: {height}")
+            # print(f"box height: {height}")
             # Scroll down to load more
             # page.evaluate("window.scrollBy(0, document.body.scrollHeight)")
             await page.evaluate(f"window.scrollBy(0, {box_height_avg})")
