@@ -1,5 +1,6 @@
 import asyncio
 import os
+from dotenv import load_dotenv
 
 from scraper import Scraper
 from repository import TweetRepository
@@ -8,9 +9,13 @@ from database import Database
 async def main():
     db_url = os.getenv("DB_URL")
     username = os.getenv("USERNAME")
-    scroll_pause = os.getenv("SCROLL_PAUSE")
-    max_scrolls = os.getenv("MAX_SCROLLS")
-    batch_size = os.geten("BATCH_SIZE", 200)
+    if not username or not db_url:
+        print("username and db_url are required")
+        exit(1)
+
+    scroll_pause = os.getenv("SCROLL_PAUSE", 1)
+    max_scrolls = os.getenv("MAX_SCROLLS", 200)
+    batch_size = os.getenv("BATCH_SIZE", 200)
 
     db = Database(db_url)
     await db.connect()
@@ -30,4 +35,5 @@ async def main():
 
 
 if __name__ == "__main__":
+    load_dotenv()
     asyncio.run(main())
